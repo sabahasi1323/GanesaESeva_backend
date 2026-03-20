@@ -55,7 +55,8 @@ const allowedOrigins = [
   'http://127.0.0.1:5000',
   'https://celebrated-kashata-1a90d0.netlify.app',
   'https://ganesaeseva.netlify.app',
-  'https://ganesaeseva-backend.onrender.com'
+  'https://peppy-axolotl-915933.netlify.app',
+  'https://ganesaeseva-backend-1.onrender.com'
 ];
 
 // CORS configuration
