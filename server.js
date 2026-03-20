@@ -12,15 +12,30 @@ import messageTemplateRoutes from './routes/messageTemplates.js';
 
 dotenv.config();
 
+// Debug: Check if environment variables are loaded
+console.log('Environment variables loaded:');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not set');
+console.log('PORT:', process.env.PORT || 'Using default 5000');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+
+// Validate required environment variables
+if (!process.env.MONGODB_URI) {
+  console.error('FATAL ERROR: MONGODB_URI is not defined in environment variables');
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET is not defined in environment variables');
+  process.exit(1);
+}
+
 const app = express();
 
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -77,7 +92,7 @@ const corsOptions = {
     'origin'
   ],
   exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  optionsSuccessStatus: 204, // Some legacy browsers choke on 204
   preflightContinue: false,
   maxAge: 86400 // 24 hours
 };
@@ -112,6 +127,23 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Ganesa ESeva Backend API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Handle OPTIONS requests for all routes
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, x-requested-with, accept, origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.status(204).send();
+});
+
 app.use('/api/statuses', statusRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -121,7 +153,19 @@ app.use('/api/message-templates', messageTemplateRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
-  res.status(404).json({ error: 'Not Found' });
+  console.log('404 - Route not found:', req.method, req.originalUrl);
+  console.log('Available routes:');
+  console.log('- GET /api/statuses');
+  console.log('- POST /api/auth/login');
+  console.log('- POST /api/auth/register');
+  console.log('- GET /api/categories');
+  console.log('- GET /api/subcategories');
+  console.log('- GET /api/customers');
+  console.log('- POST /api/customers');
+  console.log('- PUT /api/customers/:id');
+  console.log('- DELETE /api/customers/:id');
+  console.log('- GET /api/message-templates');
+  res.status(404).json({ error: 'Not Found', path: req.originalUrl });
 });
 
 // Error Handler
